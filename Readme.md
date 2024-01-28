@@ -63,9 +63,9 @@ To run this project, you will need to add the following environment variables to
 
 To get started with this project, make sure you have Go installed on your system. then you can clone it with following comman:
 
-`git clonen https://github.com/BXBZwe/CoursyclopediaBackend.git`
+`git clone https://github.com/BXBZwe/CoursyclopediaBackend.git`
 
-`cd coursyclopedia_backend`
+`cd CoursyclopediaBackend`
 
 ## Install the dependencies
 `go mod tidy`
