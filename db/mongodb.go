@@ -16,6 +16,7 @@ var Database *mongo.Database
 
 func ConnectDB() {
 	connectionString := os.Getenv("MONGODB_URI")
+	// connectionString := os.Getenv("DB_URI")
 
 	clientOptions := options.Client().ApplyURI(connectionString)
 
@@ -36,6 +37,11 @@ func ConnectDB() {
 
 func GetDB() *mongo.Database {
 	return Database
+}
+
+// GetCollection returns a handle to a MongoDB collection
+func GetCollection(collectionName string) *mongo.Collection {
+	return DB.Database("coursyclopediadb").Collection(collectionName)
 }
 
 func DisconnectDB() {
