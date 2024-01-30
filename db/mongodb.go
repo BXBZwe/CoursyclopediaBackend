@@ -15,8 +15,7 @@ var DB *mongo.Client
 var Database *mongo.Database
 
 func ConnectDB() {
-	// connectionString := os.Getenv("MONGODB_URI")
-	connectionString := os.Getenv("MONGO_URL")
+	connectionString := os.Getenv("MONGODB_URI")
 
 	clientOptions := options.Client().ApplyURI(connectionString)
 
