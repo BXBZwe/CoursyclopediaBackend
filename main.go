@@ -2,13 +2,26 @@
 package main
 
 import (
-	//"BackendCoursyclopedia/api"
 	"BackendCoursyclopedia/db"
 	"log"
+
+	"BackendCoursyclopedia/api"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 )
+
+// SetupRoutes configures the application routes
+func SetupRoutes(app *fiber.App) {
+	// User routes
+	app.Get("/api/users", api.GetUsers)
+	app.Get("/api/users/:id", api.GetSpecificUser)
+	app.Post("/api/users", api.NewUser)
+	app.Put("/api/users/:id", api.UpdateUser)
+	app.Delete("/api/users/:id", api.DeleteUser)
+
+	// Add more routes for other resources as needed
+}
 
 func main() {
 	err := godotenv.Load()
@@ -20,8 +33,7 @@ func main() {
 	defer db.DisconnectDB()
 
 	app := fiber.New()
-
-	//api.SetupRoutes(app)
+	SetupRoutes(app)
 
 	log.Fatal(app.Listen(":3000"))
 }

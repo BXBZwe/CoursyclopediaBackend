@@ -38,6 +38,11 @@ func GetDB() *mongo.Database {
 	return Database
 }
 
+// GetCollection returns a handle to a MongoDB collection
+func GetCollection(collectionName string) *mongo.Collection {
+	return DB.Database("coursyclopediadb").Collection(collectionName)
+}
+
 func DisconnectDB() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
