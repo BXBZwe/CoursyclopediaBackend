@@ -13,6 +13,10 @@ import (
 
 // SetupRoutes configures the application routes
 func SetupRoutes(app *fiber.App) {
+	// Home Route
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Welcome to BackendCoursyclopedia API!")
+	})
 	// User routes
 	app.Get("/api/users", api.GetUsers)
 	app.Get("/api/users/:id", api.GetSpecificUser)
