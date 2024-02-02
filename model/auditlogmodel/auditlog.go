@@ -1,4 +1,4 @@
-package model
+package auditlogmodel
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"

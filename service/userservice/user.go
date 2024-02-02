@@ -1,13 +1,13 @@
 package usersvc
 
 import (
-	"BackendCoursyclopedia/model"
+	"BackendCoursyclopedia/model/usermodel"
 	userrepo "BackendCoursyclopedia/repository/userrepository"
 	"context"
 )
 
 type IUserService interface {
-	GetAllUsers(ctx context.Context) ([]model.User, error)
+	GetAllUsers(ctx context.Context) ([]usermodel.User, error)
 }
 
 type UserService struct {
@@ -20,6 +20,6 @@ func NewUserService(userRepo userrepo.IUserRepository) IUserService {
 	}
 }
 
-func (s *UserService) GetAllUsers(ctx context.Context) ([]model.User, error) {
+func (s *UserService) GetAllUsers(ctx context.Context) ([]usermodel.User, error) {
 	return s.UserRepository.FindAllUsers(ctx)
 }

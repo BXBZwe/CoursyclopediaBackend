@@ -51,6 +51,10 @@ coursyclopediabackend/
 
 │   └── utils/
 
+├── route/
+
+│   └── routes/          # Routes for endpoints
+
 └── main.go              # Entry point of the application
 
 ## Environment Variables

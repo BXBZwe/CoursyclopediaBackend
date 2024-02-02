@@ -2,7 +2,7 @@ package userrepo
 
 import (
 	"BackendCoursyclopedia/db"
-	"BackendCoursyclopedia/model"
+	"BackendCoursyclopedia/model/usermodel"
 	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,7 +11,7 @@ import (
 )
 
 type IUserRepository interface {
-	FindAllUsers(ctx context.Context) ([]model.User, error)
+	FindAllUsers(ctx context.Context) ([]usermodel.User, error)
 }
 
 type UserRepository struct {
@@ -24,10 +24,10 @@ func NewUserRepository(db *mongo.Client) IUserRepository {
 	}
 }
 
-func (r *UserRepository) FindAllUsers(ctx context.Context) ([]model.User, error) {
+func (r *UserRepository) FindAllUsers(ctx context.Context) ([]usermodel.User, error) {
 	collection := db.GetCollection("users")
 
-	var users []model.User
+	var users []usermodel.User
 	cursor, err := collection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (r *UserRepository) FindAllUsers(ctx context.Context) ([]model.User, error)
 	defer cursor.Close(ctx)
 
 	for cursor.Next(ctx) {
-		var user model.User
+		var user usermodel.User
 		if err := cursor.Decode(&user); err != nil {
 			return nil, err
 		}

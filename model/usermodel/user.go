@@ -1,4 +1,4 @@
-package model
+package usermodel
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -7,12 +7,12 @@ import (
 type User struct {
 	ID          primitive.ObjectID   `bson:"_id,omitempty"`
 	Email       string               `bson:"email"`
-	Role        string               `bson:"role"`
+	Roles       []string             `bson:"roles"`
 	Wishlists   []primitive.ObjectID `bson:"wishlists"`
 	PhoneNumber string               `bson:"phoneNumber"`
 	Profile     struct {
 		FirstName string `bson:"firstName"`
 		LastName  string `bson:"lastName"`
 	} `bson:"profile"`
-	Faculty primitive.ObjectID `bson:"faculty,omitempty"`
+	FacultyID primitive.ObjectID `bson:"facultyId,omitempty"`
 }
