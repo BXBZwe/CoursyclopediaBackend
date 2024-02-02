@@ -20,4 +20,8 @@ func Setup(app *fiber.App) {
 
 	userGroup := app.Group("/api/users")
 	userGroup.Get("/getallusers", userHandler.GetUsers)
+	userGroup.Get("/getoneuser/:id", userHandler.GetOneUser)
+	userGroup.Post("/createoneuser", userHandler.CreateOneUser)
+	userGroup.Delete("/deleteoneuser/:id", userHandler.DeleteOneUser)
+	userGroup.Put("/updateoneuser/:id", userHandler.UpdateOneUser)
 }
