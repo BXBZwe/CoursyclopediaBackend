@@ -7,15 +7,15 @@ This is the api endpoints for the Coursyclopedia application using go language w
 
 coursyclopediabackend/
 
-├── api/                 # Handlers for the HTTP API endpoints 
+├── handler/             # Handlers for the HTTP API endpoints 
    
-├── student/         # Student-related API handlers
+├── student/             # Student-related API handlers
 
-│   ├── student/         # Student-related API handlers
+│   ├── user/            # User-related API handlers
 
-│   ├── professor/       # Professor-related API handlers
+│   ├── subject/                # Subject-related API handlers
 
-│   └── admin/           # Admin-related API handlers
+│   └── auditlog/        # AuditLog-related API handlers
 
 ├── model/               # Data models for the application
 
