@@ -27,8 +27,10 @@ func (s FacultyService) GetAllFaculties(ctx context.Context) ([]facultymodel.Fac
 	return s.FacultyRepository.FindAllFaculties(ctx)
 }
 
-func (s FacultyService) CreateFaculty(ctx context.Context, faculty facultymodel.Faculty) (facultymodel.Faculty, error) {
-	return s.FacultyRepository.CreateFaculty(ctx, faculty)
+func (s *FacultyService) CreateFaculty(ctx context.Context, faculty facultymodel.Faculty) (facultymodel.Faculty, error) {
+	facultyName := faculty.FacultyName
+
+	return s.FacultyRepository.CreateFaculty(ctx, facultyName)
 }
 
 func (s FacultyService) UpdateFaculty(ctx context.Context, facultyID string, faculty facultymodel.Faculty) (facultymodel.Faculty, error) {
