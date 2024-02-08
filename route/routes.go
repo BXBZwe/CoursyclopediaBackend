@@ -5,12 +5,15 @@ import (
 	"BackendCoursyclopedia/handler/auditloghandler"
 	"BackendCoursyclopedia/handler/facultyhandler"
 	"BackendCoursyclopedia/handler/majorhandler"
+	"BackendCoursyclopedia/handler/subjecthandler"
 	"BackendCoursyclopedia/handler/userhandler"
 	"BackendCoursyclopedia/repository/facultyrepository"
 	"BackendCoursyclopedia/repository/majorrepository"
+	"BackendCoursyclopedia/repository/subjectrepository"
 	userrepo "BackendCoursyclopedia/repository/userrepository"
 	"BackendCoursyclopedia/service/facultyservice"
 	"BackendCoursyclopedia/service/majorservice"
+	"BackendCoursyclopedia/service/subjectservice"
 
 	auditlogrepo "BackendCoursyclopedia/repository/auditlogrepository"
 
@@ -27,16 +30,19 @@ func Setup(app *fiber.App) {
 	majorRepository := majorrepository.NewMajorRepository(db.DB)
 	facultyRepository := facultyrepository.NewFacultyRepository(db.DB)
 	auditlogRepository := auditlogrepo.NewAuditLogRepository(db.DB)
+	subjectRepository := subjectrepository.NewSubjectRepository(db.DB)
 
 	userService := usersvc.NewUserService(userRepository)
 	facultyService := facultyservice.NewFacultyService(facultyRepository)
 	majorService := majorservice.NewMajorService(majorRepository, facultyRepository)
 	auditlogService := auditlogsvc.NewAuditLogService(auditlogRepository)
+	subjectService := subjectservice.NewSubjectService(subjectRepository, majorRepository)
 
 	userHandler := userhandler.NewUserHandler(userService)
 	facultyHandler := facultyhandler.NewFacultyHandler(facultyService)
 	majorHandler := majorhandler.NewMajorHandler(majorService)
 	auditlogHandler := auditloghandler.NewAuditLogHandler(auditlogService)
+	subjectHandler := subjecthandler.NewSubjectHandler(subjectService)
 
 	userGroup := app.Group("/api/users")
 	userGroup.Get("/getallusers", userHandler.GetUsers)
@@ -58,5 +64,9 @@ func Setup(app *fiber.App) {
 
 	auditlogGroup := app.Group("/api/auditlogs")
 	auditlogGroup.Get("/getallauditlogs", auditlogHandler.GetAuditLogs)
+
+	subjectGroup := app.Group("api/subjects")
+	subjectGroup.Post("/createsubject", subjectHandler.CreateSubject)
+	subjectGroup.Delete("deletesubject/:id", subjectHandler.DeleteSubject)
 
 }

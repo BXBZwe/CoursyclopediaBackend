@@ -14,6 +14,9 @@ type IMajorRepository interface {
 	CreateMajor(ctx context.Context, majorName string) (string, error)
 	DeleteMajor(ctx context.Context, majorId primitive.ObjectID) error
 	UpdateMajorName(ctx context.Context, majorId primitive.ObjectID, newName string) error
+	AddSubjectToMajor(ctx context.Context, majorId string, subjectId string) error
+	RemoveSubjectFromMajors(ctx context.Context, subjectId primitive.ObjectID) error
+	FindMajorBySubjectId(ctx context.Context, subjectId primitive.ObjectID) (majormodel.Major, error)
 }
 
 type MajorRepository struct {
@@ -57,4 +60,55 @@ func (r *MajorRepository) UpdateMajorName(ctx context.Context, majorId primitive
 	)
 
 	return err
+}
+
+func (r *MajorRepository) AddSubjectToMajor(ctx context.Context, majorId string, subjectId string) error {
+	collection := db.GetCollection("majors")
+
+	mid, err := primitive.ObjectIDFromHex(majorId)
+	if err != nil {
+		return err
+	}
+	sid, err := primitive.ObjectIDFromHex(subjectId)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": mid}
+	update := bson.M{"$addToSet": bson.M{"subjectIDs": sid}}
+	result, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+
+	return nil
+}
+
+func (r *MajorRepository) RemoveSubjectFromMajors(ctx context.Context, subjectId primitive.ObjectID) error {
+	collection := db.GetCollection("majors")
+
+	// Update all majors that contain the subjectId to remove it
+	_, err := collection.UpdateMany(
+		ctx,
+		bson.M{"subjectIDs": subjectId}, // Query for majors that contain the subjectId
+		bson.M{"$pull": bson.M{"subjectIDs": subjectId}}, // Remove the subjectId from the subjects list
+	)
+	return err
+}
+
+func (r *MajorRepository) FindMajorBySubjectId(ctx context.Context, subjectId primitive.ObjectID) (majormodel.Major, error) {
+	collection := db.GetCollection("majors")
+	var major majormodel.Major
+
+	filter := bson.M{"subjectIDs": subjectId}
+	err := collection.FindOne(ctx, filter).Decode(&major)
+	if err != nil {
+		return majormodel.Major{}, err
+	}
+
+	return major, nil
 }
