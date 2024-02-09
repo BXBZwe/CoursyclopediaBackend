@@ -11,6 +11,7 @@ import (
 )
 
 type ISubjectRepository interface {
+	FindAllSubjects(ctx context.Context) ([]subjectmodel.Subject, error)
 	CreateSubject(ctx context.Context, subject subjectmodel.Subject) (primitive.ObjectID, error)
 	DeleteSubject(ctx context.Context, subjectId primitive.ObjectID) error
 	UpdateSubject(ctx context.Context, subjectId primitive.ObjectID, updates bson.M) error
@@ -22,6 +23,27 @@ type SubjectRepository struct {
 
 func NewSubjectRepository(db *mongo.Client) ISubjectRepository {
 	return &SubjectRepository{DB: db}
+}
+
+func (r SubjectRepository) FindAllSubjects(ctx context.Context) ([]subjectmodel.Subject, error) {
+	collection := db.GetCollection("subjects")
+	var subjects []subjectmodel.Subject
+
+	cursor, err := collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var subject subjectmodel.Subject
+		if err := cursor.Decode(&subject); err != nil {
+			return nil, err
+		}
+		subjects = append(subjects, subject)
+	}
+
+	return subjects, nil
 }
 
 func (r *SubjectRepository) CreateSubject(ctx context.Context, subject subjectmodel.Subject) (primitive.ObjectID, error) {

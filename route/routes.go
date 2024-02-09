@@ -52,21 +52,23 @@ func Setup(app *fiber.App) {
 	userGroup.Put("/updateoneuser/:id", userHandler.UpdateOneUser)
 
 	faculyGroup := app.Group("/api/faculties")
-	faculyGroup.Get("getallfaculties", facultyHandler.GetFaculties)
-	faculyGroup.Post("createfaculty", facultyHandler.CreateFaculty)
-	faculyGroup.Put("updatefaculty/:id", facultyHandler.UpdateFaculty)
-	faculyGroup.Delete("deletefaculty/:id", facultyHandler.DeleteFaculty)
+	faculyGroup.Get("/getallfaculties", facultyHandler.GetFaculties)
+	faculyGroup.Post("/createfaculty", facultyHandler.CreateFaculty)
+	faculyGroup.Put("/updatefaculty/:id", facultyHandler.UpdateFaculty)
+	faculyGroup.Delete("/deletefaculty/:id", facultyHandler.DeleteFaculty)
 
 	majorGroup := app.Group("api/majors")
-	majorGroup.Post("createmajor", majorHandler.CreateMajor)
-	majorGroup.Delete("deletemajor/:id", majorHandler.DeleteMajor)
-	majorGroup.Put("updatemajor/:id", majorHandler.UpdateMajor)
+	majorGroup.Get("/getallmajors", majorHandler.GetMajors)
+	majorGroup.Post("/createmajor", majorHandler.CreateMajor)
+	majorGroup.Delete("/deletemajor/:id", majorHandler.DeleteMajor)
+	majorGroup.Put("/updatemajor/:id", majorHandler.UpdateMajor)
 
 	auditlogGroup := app.Group("/api/auditlogs")
 	auditlogGroup.Get("/getallauditlogs", auditlogHandler.GetAuditLogs)
 
 	subjectGroup := app.Group("api/subjects")
+	subjectGroup.Get("/getallsubjects", subjectHandler.GetSubjects)
 	subjectGroup.Post("/createsubject", subjectHandler.CreateSubject)
-	subjectGroup.Delete("deletesubject/:id", subjectHandler.DeleteSubject)
-	subjectGroup.Put("updatesubject/:id", subjectHandler.UpdateSubject)
+	subjectGroup.Delete("/deletesubject/:id", subjectHandler.DeleteSubject)
+	subjectGroup.Put("/updatesubject/:id", subjectHandler.UpdateSubject)
 }

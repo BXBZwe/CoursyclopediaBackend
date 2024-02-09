@@ -11,6 +11,7 @@ import (
 )
 
 type IMajorRepository interface {
+	FindAllMajors(ctx context.Context) ([]majormodel.Major, error)
 	CreateMajor(ctx context.Context, majorName string) (string, error)
 	DeleteMajor(ctx context.Context, majorId primitive.ObjectID) error
 	UpdateMajorName(ctx context.Context, majorId primitive.ObjectID, newName string) error
@@ -30,6 +31,26 @@ func NewMajorRepository(db *mongo.Client) IMajorRepository {
 	}
 }
 
+func (r MajorRepository) FindAllMajors(ctx context.Context) ([]majormodel.Major, error) {
+	collection := db.GetCollection("majors")
+	var majors []majormodel.Major
+
+	cursor, err := collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var major majormodel.Major
+		if err := cursor.Decode(&major); err != nil {
+			return nil, err
+		}
+		majors = append(majors, major)
+	}
+
+	return majors, nil
+}
 func (r *MajorRepository) CreateMajor(ctx context.Context, majorName string) (string, error) {
 	collection := db.GetCollection("majors")
 	major := majormodel.Major{

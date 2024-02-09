@@ -1,6 +1,7 @@
 package majorservice
 
 import (
+	"BackendCoursyclopedia/model/majormodel"
 	"BackendCoursyclopedia/repository/facultyrepository"
 	majorrepo "BackendCoursyclopedia/repository/majorrepository"
 	"context"
@@ -10,6 +11,7 @@ import (
 )
 
 type IMajorService interface {
+	GetAllMajors(ctx context.Context) ([]majormodel.Major, error)
 	CreateMajor(majorName string, facultyId string) error
 	DeleteMajor(majorId string) error
 	UpdateMajor(ctx context.Context, majorId string, newMajorName string, newFacultyId string) error
@@ -25,6 +27,10 @@ func NewMajorService(MajorRepo majorrepo.IMajorRepository, FacultyRepo facultyre
 		MajorRepository:   MajorRepo,
 		FacultyRepository: FacultyRepo,
 	}
+}
+
+func (s MajorService) GetAllMajors(ctx context.Context) ([]majormodel.Major, error) {
+	return s.MajorRepository.FindAllMajors(ctx)
 }
 
 func (s *MajorService) CreateMajor(majorName string, facultyId string) error {

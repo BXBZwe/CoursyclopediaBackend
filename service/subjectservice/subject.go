@@ -14,6 +14,7 @@ import (
 )
 
 type ISubjectService interface {
+	GetAllSubjects(ctx context.Context) ([]subjectmodel.Subject, error)
 	CreateSubject(ctx context.Context, subject subjectmodel.Subject, majorId string) (string, error)
 	DeleteSubject(subjectId string) error
 	UpdateSubject(ctx context.Context, subjectId string, updates subjectmodel.SubjectUpdateRequest, newMajorId string) error
@@ -29,6 +30,10 @@ func NewSubjectService(SubjectRepo subjectrepository.ISubjectRepository, MajorRe
 		SubjectRepository: SubjectRepo,
 		MajorRepository:   MajorRepo,
 	}
+}
+
+func (s SubjectService) GetAllSubjects(ctx context.Context) ([]subjectmodel.Subject, error) {
+	return s.SubjectRepository.FindAllSubjects(ctx)
 }
 
 func (s *SubjectService) CreateSubject(ctx context.Context, subject subjectmodel.Subject, majorId string) (string, error) {

@@ -4,6 +4,7 @@ import (
 	"BackendCoursyclopedia/model/subjectmodel"
 	"BackendCoursyclopedia/service/subjectservice"
 	"context"
+	"time"
 
 	// "context"
 
@@ -27,6 +28,24 @@ func NewSubjectHandler(subjectService subjectservice.ISubjectService) *SubjectHa
 	}
 }
 
+func (h SubjectHandler) withTimeout() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), 30*time.Second)
+}
+
+func (h SubjectHandler) GetSubjects(c *fiber.Ctx) error {
+	ctx, cancel := h.withTimeout()
+	defer cancel()
+
+	subjects, err := h.SubjectService.GetAllSubjects(ctx)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Subjects retrieved successfully",
+		"data":    subjects,
+	})
+}
 func (h *SubjectHandler) CreateSubject(c *fiber.Ctx) error {
 	var request struct {
 		subjectmodel.Subject
