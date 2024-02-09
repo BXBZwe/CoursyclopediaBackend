@@ -3,13 +3,19 @@ package subjecthandler
 import (
 	"BackendCoursyclopedia/model/subjectmodel"
 	"BackendCoursyclopedia/service/subjectservice"
+	"context"
+
+	// "context"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	// "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ISubjectHandler interface {
 	CreateSubject(c *fiber.Ctx) error
 	DeleteSubject(c *fiber.Ctx) error
+	UpdateSubject(c *fiber.Ctx) error
 }
 type SubjectHandler struct {
 	SubjectService subjectservice.ISubjectService
@@ -48,5 +54,41 @@ func (h *SubjectHandler) DeleteSubject(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Subject successfully deleted",
+	})
+}
+
+func (h *SubjectHandler) UpdateSubject(c *fiber.Ctx) error {
+	subjectId := c.Params("id")
+	var request struct {
+		subjectmodel.SubjectUpdateRequest
+		Professors []string `json:"professors"` // This assumes you're sending professor IDs as strings
+		NewMajorId string   `json:"newMajorId"` // Add NewMajorId to your request struct
+	}
+
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	// Convert Professors string IDs to ObjectIDs
+	professorObjectIDs := make([]primitive.ObjectID, len(request.Professors))
+	for i, profStr := range request.Professors {
+		profID, err := primitive.ObjectIDFromHex(profStr)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid professor ID"})
+		}
+		professorObjectIDs[i] = profID
+	}
+
+	// Update the Professors in the request to the converted ObjectIDs
+	request.SubjectUpdateRequest.Professors = professorObjectIDs
+
+	ctx := context.Background()
+	err := h.SubjectService.UpdateSubject(ctx, subjectId, request.SubjectUpdateRequest, request.NewMajorId)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Subject updated successfully",
 	})
 }

@@ -68,5 +68,5 @@ func Setup(app *fiber.App) {
 	subjectGroup := app.Group("api/subjects")
 	subjectGroup.Post("/createsubject", subjectHandler.CreateSubject)
 	subjectGroup.Delete("deletesubject/:id", subjectHandler.DeleteSubject)
-
+	subjectGroup.Put("updatesubject/:id", subjectHandler.UpdateSubject)
 }

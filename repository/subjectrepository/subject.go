@@ -13,6 +13,7 @@ import (
 type ISubjectRepository interface {
 	CreateSubject(ctx context.Context, subject subjectmodel.Subject) (primitive.ObjectID, error)
 	DeleteSubject(ctx context.Context, subjectId primitive.ObjectID) error
+	UpdateSubject(ctx context.Context, subjectId primitive.ObjectID, updates bson.M) error
 }
 
 type SubjectRepository struct {
@@ -39,4 +40,14 @@ func (r *SubjectRepository) DeleteSubject(ctx context.Context, subjectId primiti
 	return err
 }
 
-// Updates the details of a specific subject.
+func (r *SubjectRepository) UpdateSubject(ctx context.Context, subjectId primitive.ObjectID, updates bson.M) error {
+	collection := db.GetCollection("subjects")
+
+	_, err := collection.UpdateOne(
+		ctx,
+		bson.M{"_id": subjectId},
+		bson.M{"$set": updates},
+	)
+
+	return err
+}

@@ -17,6 +17,7 @@ type IMajorRepository interface {
 	AddSubjectToMajor(ctx context.Context, majorId string, subjectId string) error
 	RemoveSubjectFromMajors(ctx context.Context, subjectId primitive.ObjectID) error
 	FindMajorBySubjectId(ctx context.Context, subjectId primitive.ObjectID) (majormodel.Major, error)
+	UpdatemajorforSubject(ctx context.Context, subjectId primitive.ObjectID, currentmajorId primitive.ObjectID, newmajorId primitive.ObjectID) error
 }
 
 type MajorRepository struct {
@@ -111,4 +112,26 @@ func (r *MajorRepository) FindMajorBySubjectId(ctx context.Context, subjectId pr
 	}
 
 	return major, nil
+}
+
+func (r *MajorRepository) UpdatemajorforSubject(ctx context.Context, subjectId primitive.ObjectID, currentmajorId primitive.ObjectID, newmajorId primitive.ObjectID) error {
+	collection := db.GetCollection("majors")
+
+	_, err := collection.UpdateOne(
+		ctx,
+		bson.M{"_id": currentmajorId},
+		bson.M{"$pull": bson.M{"subjectIDs": subjectId}},
+	)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = collection.UpdateOne(
+		ctx,
+		bson.M{"_id": newmajorId},
+		bson.M{"$addtoSet": bson.M{"subjectIDs": subjectId}},
+	)
+
+	return err
 }
