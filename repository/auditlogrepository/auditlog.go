@@ -6,11 +6,13 @@ import (
 	"context"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type IAuditLogRepository interface {
 	FindAllAuditLogs(ctx context.Context) ([]auditlogmodel.AuditLog, error) // Removed the id parameter as it's not used
+	FindAuditLogByID(ctx context.Context, auditlogId string) (*auditlogmodel.AuditLog, error)
 }
 
 type AuditLogRepository struct {
@@ -41,4 +43,21 @@ func (r *AuditLogRepository) FindAllAuditLogs(ctx context.Context) ([]auditlogmo
 	}
 
 	return auditlogs, nil
+}
+
+func (r *AuditLogRepository) FindAuditLogByID(ctx context.Context, auditlogId string) (*auditlogmodel.AuditLog, error) {
+	collection := db.GetCollection("auditlogs")
+
+	var auditlog auditlogmodel.AuditLog
+
+	objID, err := primitive.ObjectIDFromHex(auditlogId)
+	if err != nil {
+		return nil, err
+	}
+	err = collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&auditlog)
+	if err != nil {
+		return nil, err
+	}
+	return &auditlog, nil
+
 }
