@@ -38,10 +38,9 @@ func (s *SubjectService) CreateSubject(ctx context.Context, subject subjectmodel
 	}
 
 	if subject.SubjectStatus == "" {
-		subject.SubjectStatus = "AVAILABLE" // Default status
+		subject.SubjectStatus = "AVAILABLE"
 	}
 
-	// Convert subjectId (primitive.ObjectID) to a hexadecimal string
 	subjectIdHex := subjectId.Hex()
 
 	err = s.MajorRepository.AddSubjectToMajor(ctx, majorId, subjectIdHex)
@@ -55,29 +54,26 @@ func (s *SubjectService) CreateSubject(ctx context.Context, subject subjectmodel
 func (s *SubjectService) DeleteSubject(subjectId string) error {
 	ctx := context.Background()
 
-	// Convert subjectId to ObjectID
 	objId, err := primitive.ObjectIDFromHex(subjectId)
 	if err != nil {
 		return err
 	}
 
-	// Delete the subject from the subjects collection
 	err = s.SubjectRepository.DeleteSubject(ctx, objId)
 	if err != nil {
 		return err
 	}
 
-	// Remove subject ID from all majors that contain it
 	return s.MajorRepository.RemoveSubjectFromMajors(ctx, objId)
 }
 
 func (s *SubjectService) UpdateSubject(ctx context.Context, subjectId string, updates subjectmodel.SubjectUpdateRequest, newMajorId string) error {
 	subjectObjId, err := primitive.ObjectIDFromHex(subjectId)
 	if err != nil {
-		return err // Error converting subject ID from hex
+
+		return err
 	}
 
-	// Prepare the update document
 	updateFields := bson.M{}
 
 	if updates.SubjectCode != "" {
@@ -114,11 +110,13 @@ func (s *SubjectService) UpdateSubject(ctx context.Context, subjectId string, up
 	if newMajorId != "" {
 		newmajObjId, err := primitive.ObjectIDFromHex(newMajorId)
 		if err != nil {
+
 			return err
 		}
 
 		currentmajor, err := s.MajorRepository.FindMajorBySubjectId(ctx, subjectObjId)
 		if err != nil {
+
 			return err
 		}
 
@@ -130,13 +128,11 @@ func (s *SubjectService) UpdateSubject(ctx context.Context, subjectId string, up
 		}
 	}
 
-	// // Perform the update if there are fields to update
-	// if len(updateFields) > 0 {
-	// 	err = s.SubjectRepository.UpdateSubject(ctx, subjectObjId, updateFields)
-	// 	if err != nil {
-	// 		return err // Error updating subject
-	// 	}
-	// }
-
+	if len(updateFields) > 0 {
+		err = s.SubjectRepository.UpdateSubject(ctx, subjectObjId, updateFields)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
