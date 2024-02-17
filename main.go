@@ -10,9 +10,16 @@ import (
 )
 
 func main() {
-	if _, err := os.Stat(".env"); err == nil {
+
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
+
+	if _, exists := os.LookupEnv("RAILWAY_ENVIRONMENT"); exists == false {
 		if err := godotenv.Load(); err != nil {
-			log.Fatal("Error loading .env file")
+			log.Fatal("error loading .env file:", err)
+
 		}
 	}
 	app := fiber.New()
@@ -24,5 +31,6 @@ func main() {
 		port = "3000"
 	}
 
+	// log.Fatal(app.Listen("0.0.0.0" + port))
 	log.Fatal(app.Listen(":" + port))
 }
