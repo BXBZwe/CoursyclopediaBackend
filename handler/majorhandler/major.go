@@ -3,6 +3,7 @@ package majorhandler
 import (
 	"BackendCoursyclopedia/service/majorservice"
 	"context"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,6 +22,25 @@ func NewMajorHandler(majorService majorservice.IMajorService) *MajorHandler {
 	return &MajorHandler{
 		MajorService: majorService,
 	}
+}
+
+func (h MajorHandler) withTimeout() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), 30*time.Second)
+}
+
+func (h MajorHandler) GetMajors(c *fiber.Ctx) error {
+	ctx, cancel := h.withTimeout()
+	defer cancel()
+
+	majors, err := h.MajorService.GetAllMajors(ctx)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Majors retrieved successfully",
+		"data":    majors,
+	})
 }
 
 func (h *MajorHandler) CreateMajor(c *fiber.Ctx) error {

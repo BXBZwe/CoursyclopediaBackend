@@ -11,9 +11,14 @@ import (
 )
 
 type IMajorRepository interface {
+	FindAllMajors(ctx context.Context) ([]majormodel.Major, error)
 	CreateMajor(ctx context.Context, majorName string) (string, error)
 	DeleteMajor(ctx context.Context, majorId primitive.ObjectID) error
 	UpdateMajorName(ctx context.Context, majorId primitive.ObjectID, newName string) error
+	AddSubjectToMajor(ctx context.Context, majorId string, subjectId string) error
+	RemoveSubjectFromMajors(ctx context.Context, subjectId primitive.ObjectID) error
+	FindMajorBySubjectId(ctx context.Context, subjectId primitive.ObjectID) (majormodel.Major, error)
+	UpdatemajorforSubject(ctx context.Context, subjectId primitive.ObjectID, currentmajorId primitive.ObjectID, newmajorId primitive.ObjectID) error
 }
 
 type MajorRepository struct {
@@ -26,6 +31,26 @@ func NewMajorRepository(db *mongo.Client) IMajorRepository {
 	}
 }
 
+func (r MajorRepository) FindAllMajors(ctx context.Context) ([]majormodel.Major, error) {
+	collection := db.GetCollection("majors")
+	var majors []majormodel.Major
+
+	cursor, err := collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var major majormodel.Major
+		if err := cursor.Decode(&major); err != nil {
+			return nil, err
+		}
+		majors = append(majors, major)
+	}
+
+	return majors, nil
+}
 func (r *MajorRepository) CreateMajor(ctx context.Context, majorName string) (string, error) {
 	collection := db.GetCollection("majors")
 	major := majormodel.Major{
@@ -56,5 +81,75 @@ func (r *MajorRepository) UpdateMajorName(ctx context.Context, majorId primitive
 		bson.M{"$set": bson.M{"majorName": newName}},
 	)
 
+	return err
+}
+
+func (r *MajorRepository) AddSubjectToMajor(ctx context.Context, majorId string, subjectId string) error {
+	collection := db.GetCollection("majors")
+
+	mid, err := primitive.ObjectIDFromHex(majorId)
+	if err != nil {
+
+		return err
+	}
+
+	sid, err := primitive.ObjectIDFromHex(subjectId)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": mid}
+	update := bson.M{"$addToSet": bson.M{"subjectIDs": sid}}
+	result, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+
+	return nil
+}
+
+func (r *MajorRepository) RemoveSubjectFromMajors(ctx context.Context, subjectId primitive.ObjectID) error {
+	collection := db.GetCollection("majors")
+
+	_, err := collection.UpdateMany(
+		ctx,
+		bson.M{"subjectIDs": subjectId},
+		bson.M{"$pull": bson.M{"subjectIDs": subjectId}},
+	)
+	return err
+}
+
+func (r *MajorRepository) FindMajorBySubjectId(ctx context.Context, subjectId primitive.ObjectID) (majormodel.Major, error) {
+
+	collection := db.GetCollection("majors")
+	var major majormodel.Major
+
+	filter := bson.M{"subjectIDs": subjectId}
+	err := collection.FindOne(ctx, filter).Decode(&major)
+	if err != nil {
+		return majormodel.Major{}, err
+	}
+	return major, nil
+}
+
+func (r *MajorRepository) UpdatemajorforSubject(ctx context.Context, subjectId primitive.ObjectID, currentmajorId primitive.ObjectID, newmajorId primitive.ObjectID) error {
+	collection := db.GetCollection("majors")
+
+	_, err := collection.UpdateOne(
+		ctx,
+		bson.M{"_id": currentmajorId},
+		bson.M{"$pull": bson.M{"subjectIDs": subjectId}},
+	)
+	if err != nil {
+		return err
+	}
+	_, err = collection.UpdateOne(
+		ctx,
+		bson.M{"_id": newmajorId},
+		bson.M{"$addToSet": bson.M{"subjectIDs": subjectId}},
+	)
 	return err
 }
