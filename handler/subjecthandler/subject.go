@@ -14,7 +14,9 @@ import (
 )
 
 type ISubjectHandler interface {
+	GetSubjects(c *fiber.Ctx) error
 	CreateSubject(c *fiber.Ctx) error
+	GetEachSubject(c *fiber.Ctx) error
 	DeleteSubject(c *fiber.Ctx) error
 	UpdateSubject(c *fiber.Ctx) error
 }
@@ -46,6 +48,23 @@ func (h SubjectHandler) GetSubjects(c *fiber.Ctx) error {
 		"data":    subjects,
 	})
 }
+
+func (h *SubjectHandler) GetEachSubject(c *fiber.Ctx) error {
+	ctx, cancel := h.withTimeout()
+	defer cancel()
+
+	subjectID := c.Params("id")
+	subject, err := h.SubjectService.GetSubjectByID(ctx, subjectID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Specific Subject retrieved successfully",
+		"data":    subject,
+	})
+}
+
 func (h *SubjectHandler) CreateSubject(c *fiber.Ctx) error {
 	var request struct {
 		subjectmodel.Subject

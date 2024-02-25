@@ -12,6 +12,8 @@ import (
 
 type ISubjectRepository interface {
 	FindAllSubjects(ctx context.Context) ([]subjectmodel.Subject, error)
+	FindSubjectbyID(ctx context.Context, subjectId string) (*subjectmodel.Subject, error)
+	FindSubjectsByIDs(ctx context.Context, subjectIDs []primitive.ObjectID) ([]subjectmodel.Subject, error)
 	CreateSubject(ctx context.Context, subject subjectmodel.Subject) (primitive.ObjectID, error)
 	DeleteSubject(ctx context.Context, subjectId primitive.ObjectID) error
 	UpdateSubject(ctx context.Context, subjectId primitive.ObjectID, updates bson.M) error
@@ -41,6 +43,48 @@ func (r SubjectRepository) FindAllSubjects(ctx context.Context) ([]subjectmodel.
 			return nil, err
 		}
 		subjects = append(subjects, subject)
+	}
+
+	return subjects, nil
+}
+
+func (r *SubjectRepository) FindSubjectbyID(ctx context.Context, subjectId string) (*subjectmodel.Subject, error) {
+	collection := db.GetCollection("subjects")
+	var subject subjectmodel.Subject
+
+	objID, err := primitive.ObjectIDFromHex(subjectId)
+	if err != nil {
+		return nil, err
+	}
+
+	err = collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&subject)
+	if err != nil {
+		return nil, err
+	}
+	return &subject, nil
+}
+
+func (r *SubjectRepository) FindSubjectsByIDs(ctx context.Context, subjectIDs []primitive.ObjectID) ([]subjectmodel.Subject, error) {
+	collection := db.GetCollection("subjects")
+	var subjects []subjectmodel.Subject
+
+	filter := bson.M{"_id": bson.M{"$in": subjectIDs}}
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var subject subjectmodel.Subject
+		if err := cursor.Decode(&subject); err != nil {
+			return nil, err
+		}
+		subjects = append(subjects, subject)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
 	}
 
 	return subjects, nil

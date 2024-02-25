@@ -13,8 +13,9 @@ import (
 
 type IFacultyRepository interface {
 	FindAllFaculties(ctx context.Context) ([]facultymodel.Faculty, error)
-	CreateFaculty(ctx context.Context, facultyName string) (facultymodel.Faculty, error)
-	UpdateFaculty(ctx context.Context, facultyID string, faculty facultymodel.Faculty) (facultymodel.Faculty, error)
+	FindFacultyByID(ctx context.Context, facultyID string) (*facultymodel.Faculty, error)
+	CreateFaculty(ctx context.Context, facultyName string, image []byte) (facultymodel.Faculty, error)
+	UpdateFaculty(ctx context.Context, facultyID string, faculty facultymodel.Faculty, image []byte) (facultymodel.Faculty, error)
 	DeleteFaculty(ctx context.Context, facultyID string) error
 	AddMajorToFaculty(ctx context.Context, facultyId string, majorId string) error
 	RemoveMajorFromFaculty(ctx context.Context, majorId primitive.ObjectID) error
@@ -53,11 +54,28 @@ func (r FacultyRepository) FindAllFaculties(ctx context.Context) ([]facultymodel
 	return faculties, nil
 }
 
-func (r FacultyRepository) CreateFaculty(ctx context.Context, facultyName string) (facultymodel.Faculty, error) {
+func (r *FacultyRepository) FindFacultyByID(ctx context.Context, facultyID string) (*facultymodel.Faculty, error) {
+	collection := db.GetCollection("faculties")
+	var faculty facultymodel.Faculty
+
+	objID, err := primitive.ObjectIDFromHex(facultyID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&faculty)
+	if err != nil {
+		return nil, err
+	}
+	return &faculty, nil
+}
+
+func (r FacultyRepository) CreateFaculty(ctx context.Context, facultyName string, image []byte) (facultymodel.Faculty, error) {
 	collection := db.GetCollection("faculties")
 	Faculty := facultymodel.Faculty{
 		ID:          primitive.NewObjectID(),
 		FacultyName: facultyName,
+		Image:       image,
 		MajorIDs:    []primitive.ObjectID{},
 	}
 	_, err := collection.InsertOne(ctx, Faculty)
@@ -68,16 +86,20 @@ func (r FacultyRepository) CreateFaculty(ctx context.Context, facultyName string
 	return Faculty, nil
 }
 
-func (r FacultyRepository) UpdateFaculty(ctx context.Context, facultyID string, faculty facultymodel.Faculty) (facultymodel.Faculty, error) {
+func (r FacultyRepository) UpdateFaculty(ctx context.Context, facultyID string, faculty facultymodel.Faculty, image []byte) (facultymodel.Faculty, error) {
 	collection := db.GetCollection("faculties")
 	objID, err := primitive.ObjectIDFromHex(facultyID)
 	if err != nil {
 		return facultymodel.Faculty{}, err
 	}
 
+	updateData := bson.M{"$set": faculty}
+	if image != nil {
+		updateData["$set"].(bson.M)["image"] = image
+	}
+
 	filter := bson.M{"_id": objID}
-	update := bson.M{"$set": faculty}
-	result, err := collection.UpdateOne(ctx, filter, update)
+	result, err := collection.UpdateOne(ctx, filter, updateData)
 	if err != nil {
 		return facultymodel.Faculty{}, err
 	}

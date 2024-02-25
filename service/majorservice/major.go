@@ -2,30 +2,35 @@ package majorservice
 
 import (
 	"BackendCoursyclopedia/model/majormodel"
+	"BackendCoursyclopedia/model/subjectmodel"
 	"BackendCoursyclopedia/repository/facultyrepository"
 	majorrepo "BackendCoursyclopedia/repository/majorrepository"
+	"BackendCoursyclopedia/repository/subjectrepository"
 	"context"
-	"errors"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type IMajorService interface {
 	GetAllMajors(ctx context.Context) ([]majormodel.Major, error)
-	CreateMajor(majorName string, facultyId string) error
+	GetMajorByID(ctx context.Context, majorID string) (*majormodel.Major, error)
+	GetSubjectsForMajor(ctx context.Context, majorId string) ([]subjectmodel.Subject, error)
+	CreateMajor(majorName string, facultyId string, image []byte) error
 	DeleteMajor(majorId string) error
-	UpdateMajor(ctx context.Context, majorId string, newMajorName string, newFacultyId string) error
+	UpdateMajor(ctx context.Context, majorId string, newMajorName string, newFacultyId string, image []byte) error
 }
 
 type MajorService struct {
 	MajorRepository   majorrepo.IMajorRepository
 	FacultyRepository facultyrepository.IFacultyRepository
+	SubjectRepository subjectrepository.ISubjectRepository
 }
 
-func NewMajorService(MajorRepo majorrepo.IMajorRepository, FacultyRepo facultyrepository.IFacultyRepository) IMajorService {
+func NewMajorService(MajorRepo majorrepo.IMajorRepository, FacultyRepo facultyrepository.IFacultyRepository, SubjectRepo subjectrepository.ISubjectRepository) IMajorService {
 	return &MajorService{
 		MajorRepository:   MajorRepo,
 		FacultyRepository: FacultyRepo,
+		SubjectRepository: SubjectRepo,
 	}
 }
 
@@ -33,16 +38,27 @@ func (s MajorService) GetAllMajors(ctx context.Context) ([]majormodel.Major, err
 	return s.MajorRepository.FindAllMajors(ctx)
 }
 
-func (s *MajorService) CreateMajor(majorName string, facultyId string) error {
-	if s.MajorRepository == nil {
-		return errors.New("major repository is not initialized")
+func (s *MajorService) GetMajorByID(ctx context.Context, majorID string) (*majormodel.Major, error) {
+	return s.MajorRepository.FindmajorbyID(ctx, majorID)
+}
+
+func (s *MajorService) GetSubjectsForMajor(ctx context.Context, majorId string) ([]subjectmodel.Subject, error) {
+	major, err := s.MajorRepository.FindmajorbyID(ctx, majorId)
+	if err != nil {
+		return nil, err
 	}
-	if s.FacultyRepository == nil {
-		return errors.New("faculty repository is not initialized")
+
+	subjects, err := s.SubjectRepository.FindSubjectsByIDs(ctx, major.SubjectIDs)
+	if err != nil {
+		return nil, err
 	}
+
+	return subjects, nil
+}
+func (s *MajorService) CreateMajor(majorName string, facultyId string, image []byte) error {
 	ctx := context.Background()
 
-	majorId, err := s.MajorRepository.CreateMajor(ctx, majorName)
+	majorId, err := s.MajorRepository.CreateMajor(ctx, majorName, image)
 	if err != nil {
 		return err
 	}
@@ -66,14 +82,14 @@ func (s *MajorService) DeleteMajor(majorId string) error {
 	return s.FacultyRepository.RemoveMajorFromFaculty(ctx, objId)
 }
 
-func (s *MajorService) UpdateMajor(ctx context.Context, majorId string, newMajorName string, newFacultyId string) error {
+func (s *MajorService) UpdateMajor(ctx context.Context, majorId string, newMajorName string, newFacultyId string, image []byte) error {
 	majorObjId, err := primitive.ObjectIDFromHex(majorId)
 	if err != nil {
 		return err
 	}
 
-	if newMajorName != "" {
-		err = s.MajorRepository.UpdateMajorName(ctx, majorObjId, newMajorName)
+	if newMajorName != "" || image != nil {
+		err = s.MajorRepository.UpdateMajor(ctx, majorObjId, newMajorName, image)
 		if err != nil {
 			return err
 		}

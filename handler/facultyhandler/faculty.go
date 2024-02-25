@@ -2,6 +2,8 @@ package facultyhandler
 
 import (
 	"BackendCoursyclopedia/model/facultymodel"
+	"encoding/json"
+	"io"
 
 	facultysvc "BackendCoursyclopedia/service/facultyservice"
 	"context"
@@ -12,6 +14,8 @@ import (
 
 type IFacultyHandler interface {
 	GetFaculties(c *fiber.Ctx) error
+	GetEachFaculty(c *fiber.Ctx) error
+	GetMajorsForeachFaculty(c *fiber.Ctx) error
 	CreateFaculty(c *fiber.Ctx) error
 	UpdateFaculty(c *fiber.Ctx) error
 	DeleteFaculty(c *fiber.Ctx) error
@@ -46,16 +50,69 @@ func (h FacultyHandler) GetFaculties(c *fiber.Ctx) error {
 	})
 }
 
-func (h FacultyHandler) CreateFaculty(c *fiber.Ctx) error {
+func (h *FacultyHandler) GetEachFaculty(c *fiber.Ctx) error {
 	ctx, cancel := h.withTimeout()
 	defer cancel()
 
-	var faculty facultymodel.Faculty
-	if err := c.BodyParser(&faculty); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	facultyID := c.Params("id")
+	faculty, err := h.FacultyService.GetFacultyByID(ctx, facultyID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	createdFaculty, err := h.FacultyService.CreateFaculty(ctx, faculty)
+	return c.JSON(fiber.Map{
+		"message": "Specific Faculty retrieved successfully",
+		"data":    faculty,
+	})
+}
+
+func (h *FacultyHandler) GetMajorsForeachFaculty(c *fiber.Ctx) error {
+	ctx, cancel := h.withTimeout()
+	defer cancel()
+
+	facultyID := c.Params("id")
+	majors, err := h.FacultyService.GetMajorsForFaculty(ctx, facultyID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Majors related to the faculty retrieved successfully",
+		"data":    majors,
+	})
+}
+
+func (h *FacultyHandler) CreateFaculty(c *fiber.Ctx) error {
+	ctx, cancel := h.withTimeout()
+	defer cancel()
+
+	file, err := c.FormFile("image")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Image upload error"})
+	}
+
+	fileData, err := file.Open()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to process image"})
+	}
+	defer fileData.Close()
+
+	imageBytes, err := io.ReadAll(fileData)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read image data"})
+	}
+
+	facultyName := c.FormValue("FacultyName")
+	if facultyName == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Faculty name is required"})
+	}
+
+	faculty := facultymodel.Faculty{
+		FacultyName: facultyName,
+		Image:       imageBytes,
+	}
+
+	createdFaculty, err := h.FacultyService.CreateFaculty(ctx, faculty, imageBytes)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -66,7 +123,7 @@ func (h FacultyHandler) CreateFaculty(c *fiber.Ctx) error {
 	})
 }
 
-func (h FacultyHandler) UpdateFaculty(c *fiber.Ctx) error {
+func (h *FacultyHandler) UpdateFaculty(c *fiber.Ctx) error {
 	ctx, cancel := h.withTimeout()
 	defer cancel()
 
@@ -76,7 +133,28 @@ func (h FacultyHandler) UpdateFaculty(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	updatedFaculty, err := h.FacultyService.UpdateFaculty(ctx, facultyID, faculty)
+	file, err := c.FormFile("image")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Image upload error"})
+	}
+
+	fileData, err := file.Open()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to process image"})
+	}
+	defer fileData.Close()
+
+	imageBytes, err := io.ReadAll(fileData)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read image data"})
+	}
+
+	facultyData := c.FormValue("faculty")
+	if err := json.Unmarshal([]byte(facultyData), &faculty); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid faculty data"})
+	}
+
+	updatedFaculty, err := h.FacultyService.UpdateFaculty(ctx, facultyID, faculty, imageBytes)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
