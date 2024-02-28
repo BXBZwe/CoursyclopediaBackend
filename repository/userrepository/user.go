@@ -17,6 +17,7 @@ type IUserRepository interface {
 	CreateUser(ctx context.Context, user usermodel.User) (*usermodel.User, error)
 	DeleteUserByID(ctx context.Context, userID string) error
 	UpdateUserByID(ctx context.Context, userID string, updateUser usermodel.User) (*usermodel.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*usermodel.User, error)
 }
 
 type UserRepository struct {
@@ -61,6 +62,17 @@ func (r *UserRepository) FindUserByID(ctx context.Context, userID string) (*user
 	}
 
 	err = collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*usermodel.User, error) {
+	collection := db.GetCollection("users")
+	var user usermodel.User
+	filter := bson.M{"email": email}
+	err := collection.FindOne(ctx, filter).Decode(&user)
 	if err != nil {
 		return nil, err
 	}

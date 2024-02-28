@@ -9,6 +9,7 @@ import (
 type IUserService interface {
 	GetAllUsers(ctx context.Context) ([]usermodel.User, error)
 	GetUserByID(ctx context.Context, userID string) (*usermodel.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*usermodel.User, error)
 	CreateNewUser(ctx context.Context, user usermodel.User) (*usermodel.User, error)
 	DeleteSpecificUser(ctx context.Context, userID string) error
 	UpdateSpecificByID(ctx context.Context, userID string, updateUser usermodel.User) (*usermodel.User, error)
@@ -30,6 +31,11 @@ func (s *UserService) GetUserByID(ctx context.Context, userID string) (*usermode
 
 func (s *UserService) GetAllUsers(ctx context.Context) ([]usermodel.User, error) {
 	return s.UserRepository.FindAllUsers(ctx)
+
+}
+
+func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*usermodel.User, error) {
+	return s.UserRepository.GetUserByEmail(ctx, email)
 
 }
 

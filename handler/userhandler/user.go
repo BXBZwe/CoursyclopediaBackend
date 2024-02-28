@@ -15,6 +15,7 @@ type IUserHandler interface {
 	CreateOneUser(c *fiber.Ctx) error
 	DeleteOneUser(c *fiber.Ctx) error
 	UpdateOneUser(c *fiber.Ctx) error
+	GetUserByEmail(c *fiber.Ctx) error
 }
 
 type UserHandler struct {
@@ -60,6 +61,23 @@ func (h *UserHandler) GetOneUser(c *fiber.Ctx) error {
 		"message": "Specific User retrieved successfully",
 		"data":    user,
 	})
+}
+
+func (h *UserHandler) GetUserByEmail(c *fiber.Ctx) error {
+	ctx, cancel := h.withTimeout()
+	defer cancel()
+
+	email := c.Params("email")
+	if email == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Email is required"})
+	}
+
+	user, err := h.UserService.GetUserByEmail(ctx, email)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(user)
 }
 
 func (h *UserHandler) CreateOneUser(c *fiber.Ctx) error {
