@@ -81,5 +81,6 @@ func Setup(app *fiber.App) {
 	subjectGroup.Post("/createsubject", subjectHandler.CreateSubject)
 	subjectGroup.Delete("/deletesubject/:id", subjectHandler.DeleteSubject)
 	subjectGroup.Put("/updatesubject/:id", subjectHandler.UpdateSubject)
+	subjectGroup.Put("/updatelikes/:id", subjectHandler.UpdateSubjectLikes)
 
 }

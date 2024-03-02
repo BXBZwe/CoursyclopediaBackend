@@ -19,6 +19,7 @@ type ISubjectHandler interface {
 	GetEachSubject(c *fiber.Ctx) error
 	DeleteSubject(c *fiber.Ctx) error
 	UpdateSubject(c *fiber.Ctx) error
+	UpdateSubjectLikes(c *fiber.Ctx) error
 }
 type SubjectHandler struct {
 	SubjectService subjectservice.ISubjectService
@@ -126,5 +127,26 @@ func (h *SubjectHandler) UpdateSubject(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Subject updated successfully",
+	})
+}
+
+func (h *SubjectHandler) UpdateSubjectLikes(c *fiber.Ctx) error {
+	subjectId := c.Params("id")
+
+	var request struct {
+		Likes int `json:"likes"`
+	}
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	ctx := c.Context()
+	err := h.SubjectService.UpdateLikes(ctx, subjectId, request.Likes)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Likes updated successfully",
 	})
 }

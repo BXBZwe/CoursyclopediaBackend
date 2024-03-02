@@ -17,6 +17,7 @@ type ISubjectRepository interface {
 	CreateSubject(ctx context.Context, subject subjectmodel.Subject) (primitive.ObjectID, error)
 	DeleteSubject(ctx context.Context, subjectId primitive.ObjectID) error
 	UpdateSubject(ctx context.Context, subjectId primitive.ObjectID, updates bson.M) error
+	UpdateLikes(ctx context.Context, subjectID primitive.ObjectID, likes int) error
 }
 
 type SubjectRepository struct {
@@ -116,4 +117,16 @@ func (r *SubjectRepository) UpdateSubject(ctx context.Context, subjectId primiti
 	)
 
 	return err
+}
+
+func (r *SubjectRepository) UpdateLikes(ctx context.Context, subjectID primitive.ObjectID, likes int) error {
+	collection := db.GetCollection("subjects")
+
+	_, err := collection.UpdateOne(
+		ctx, bson.M{"_id": subjectID}, bson.M{"$set": bson.M{"likes": likes}},
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }

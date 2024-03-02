@@ -5,6 +5,7 @@ import (
 	"BackendCoursyclopedia/repository/majorrepository"
 	"BackendCoursyclopedia/repository/subjectrepository"
 	"context"
+	"log"
 
 	// "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson"
@@ -19,6 +20,7 @@ type ISubjectService interface {
 	CreateSubject(ctx context.Context, subject subjectmodel.Subject, majorId string) (string, error)
 	DeleteSubject(subjectId string) error
 	UpdateSubject(ctx context.Context, subjectId string, updates subjectmodel.SubjectUpdateRequest, newMajorId string) error
+	UpdateLikes(ctx context.Context, subjectID string, likes int) error
 }
 
 type SubjectService struct {
@@ -144,5 +146,21 @@ func (s *SubjectService) UpdateSubject(ctx context.Context, subjectId string, up
 			return err
 		}
 	}
+	return nil
+}
+
+func (s *SubjectService) UpdateLikes(ctx context.Context, subjectID string, likes int) error {
+	id, err := primitive.ObjectIDFromHex(subjectID)
+	if err != nil {
+		log.Printf("Invalid ID format: %v", err)
+		return err
+	}
+
+	err = s.SubjectRepository.UpdateLikes(ctx, id, likes)
+	if err != nil {
+		log.Printf("Error updating subject likes: %v", err)
+		return err
+	}
+
 	return nil
 }
