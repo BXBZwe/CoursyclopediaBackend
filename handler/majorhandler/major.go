@@ -3,7 +3,6 @@ package majorhandler
 import (
 	"BackendCoursyclopedia/service/majorservice"
 	"context"
-	"io"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -78,27 +77,15 @@ func (h *MajorHandler) GetSubjectsForeachMajor(c *fiber.Ctx) error {
 }
 
 func (h *MajorHandler) CreateMajor(c *fiber.Ctx) error {
-	majorName := c.FormValue("MajorName")
-	facultyID := c.FormValue("FacultyID")
-	if majorName == "" || facultyID == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "MajorName and FacultyID are required"})
+	var request struct {
+		MajorName string `json:"majorName"`
+		FacultyID string `json:"facultyId"`
+	}
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	file, err := c.FormFile("image")
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Image upload error"})
-	}
-	fileData, err := file.Open()
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to process image"})
-	}
-	defer fileData.Close()
-	imageBytes, err := io.ReadAll(fileData)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read image data"})
-	}
-
-	err = h.MajorService.CreateMajor(majorName, facultyID, imageBytes)
+	err := h.MajorService.CreateMajor(request.MajorName, request.FacultyID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -123,25 +110,16 @@ func (h *MajorHandler) DeleteMajor(c *fiber.Ctx) error {
 
 func (h *MajorHandler) UpdateMajor(c *fiber.Ctx) error {
 	majorId := c.Params("id")
-
-	newMajorName := c.FormValue("newMajorName")
-	newFacultyID := c.FormValue("newFacultyId")
-
-	var imageBytes []byte
-	file, err := c.FormFile("image")
-	if err == nil {
-		fileData, err := file.Open()
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to process image"})
-		}
-		defer fileData.Close()
-		imageBytes, err = io.ReadAll(fileData)
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read image data"})
-		}
+	var request struct {
+		NewMajorName string `json:"newMajorName"`
+		NewFacultyID string `json:"newFacultyId"`
+	}
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	err = h.MajorService.UpdateMajor(c.Context(), majorId, newMajorName, newFacultyID, imageBytes)
+	ctx := context.Background()
+	err := h.MajorService.UpdateMajor(ctx, majorId, request.NewMajorName, request.NewFacultyID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

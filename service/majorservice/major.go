@@ -15,9 +15,9 @@ type IMajorService interface {
 	GetAllMajors(ctx context.Context) ([]majormodel.Major, error)
 	GetMajorByID(ctx context.Context, majorID string) (*majormodel.Major, error)
 	GetSubjectsForMajor(ctx context.Context, majorId string) ([]subjectmodel.Subject, error)
-	CreateMajor(majorName string, facultyId string, image []byte) error
+	CreateMajor(majorName string, facultyId string) error
 	DeleteMajor(majorId string) error
-	UpdateMajor(ctx context.Context, majorId string, newMajorName string, newFacultyId string, image []byte) error
+	UpdateMajor(ctx context.Context, majorId string, newMajorName string, newFacultyId string) error
 }
 
 type MajorService struct {
@@ -55,10 +55,10 @@ func (s *MajorService) GetSubjectsForMajor(ctx context.Context, majorId string) 
 
 	return subjects, nil
 }
-func (s *MajorService) CreateMajor(majorName string, facultyId string, image []byte) error {
+func (s *MajorService) CreateMajor(majorName string, facultyId string) error {
 	ctx := context.Background()
 
-	majorId, err := s.MajorRepository.CreateMajor(ctx, majorName, image)
+	majorId, err := s.MajorRepository.CreateMajor(ctx, majorName)
 	if err != nil {
 		return err
 	}
@@ -82,14 +82,14 @@ func (s *MajorService) DeleteMajor(majorId string) error {
 	return s.FacultyRepository.RemoveMajorFromFaculty(ctx, objId)
 }
 
-func (s *MajorService) UpdateMajor(ctx context.Context, majorId string, newMajorName string, newFacultyId string, image []byte) error {
+func (s *MajorService) UpdateMajor(ctx context.Context, majorId string, newMajorName string, newFacultyId string) error {
 	majorObjId, err := primitive.ObjectIDFromHex(majorId)
 	if err != nil {
 		return err
 	}
 
-	if newMajorName != "" || image != nil {
-		err = s.MajorRepository.UpdateMajor(ctx, majorObjId, newMajorName, image)
+	if newMajorName != "" {
+		err = s.MajorRepository.UpdateMajor(ctx, majorObjId, newMajorName)
 		if err != nil {
 			return err
 		}

@@ -14,9 +14,9 @@ type IMajorRepository interface {
 	FindAllMajors(ctx context.Context) ([]majormodel.Major, error)
 	FindmajorbyID(ctx context.Context, majorId string) (*majormodel.Major, error)
 	FindMajorsByIDs(ctx context.Context, majorIDs []primitive.ObjectID) ([]majormodel.Major, error)
-	CreateMajor(ctx context.Context, majorName string, image []byte) (string, error)
+	CreateMajor(ctx context.Context, majorName string) (string, error)
 	DeleteMajor(ctx context.Context, majorId primitive.ObjectID) error
-	UpdateMajor(ctx context.Context, majorId primitive.ObjectID, newName string, image []byte) error
+	UpdateMajor(ctx context.Context, majorId primitive.ObjectID, newName string) error
 	AddSubjectToMajor(ctx context.Context, majorId string, subjectId string) error
 	RemoveSubjectFromMajors(ctx context.Context, subjectId primitive.ObjectID) error
 	FindMajorBySubjectId(ctx context.Context, subjectId primitive.ObjectID) (majormodel.Major, error)
@@ -96,12 +96,11 @@ func (r *MajorRepository) FindMajorsByIDs(ctx context.Context, majorIDs []primit
 	return majors, nil
 }
 
-func (r *MajorRepository) CreateMajor(ctx context.Context, majorName string, image []byte) (string, error) {
+func (r *MajorRepository) CreateMajor(ctx context.Context, majorName string) (string, error) {
 	collection := db.GetCollection("majors")
 	major := majormodel.Major{
 		ID:         primitive.NewObjectID(),
 		MajorName:  majorName,
-		Image:      image,
 		SubjectIDs: []primitive.ObjectID{},
 	}
 	_, err := collection.InsertOne(ctx, major)
@@ -118,12 +117,9 @@ func (r *MajorRepository) DeleteMajor(ctx context.Context, majorId primitive.Obj
 	return err
 }
 
-func (r *MajorRepository) UpdateMajor(ctx context.Context, majorId primitive.ObjectID, newName string, image []byte) error {
+func (r *MajorRepository) UpdateMajor(ctx context.Context, majorId primitive.ObjectID, newName string) error {
 	collection := db.GetCollection("majors")
 	update := bson.M{"$set": bson.M{"majorName": newName}}
-	if image != nil {
-		update["$set"].(bson.M)["image"] = image
-	}
 
 	_, err := collection.UpdateOne(
 		ctx,
