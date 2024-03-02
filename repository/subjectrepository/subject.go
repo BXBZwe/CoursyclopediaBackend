@@ -18,6 +18,7 @@ type ISubjectRepository interface {
 	DeleteSubject(ctx context.Context, subjectId primitive.ObjectID) error
 	UpdateSubject(ctx context.Context, subjectId primitive.ObjectID, updates bson.M) error
 	UpdateLikes(ctx context.Context, subjectID primitive.ObjectID, likes int) error
+	AddEmailToLikeList(ctx context.Context, subjectID primitive.ObjectID, userEmail string) error
 }
 
 type SubjectRepository struct {
@@ -128,5 +129,22 @@ func (r *SubjectRepository) UpdateLikes(ctx context.Context, subjectID primitive
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r *SubjectRepository) AddEmailToLikeList(ctx context.Context, subjectID primitive.ObjectID, userEmail string) error {
+	collection := db.GetCollection("subjects")
+
+	filter := bson.M{"_id": subjectID}
+	update := bson.M{
+		"$addToSet": bson.M{"likelist": userEmail},
+		"$inc":      bson.M{"likes": 1},
+	}
+
+	_, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

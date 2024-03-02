@@ -21,6 +21,7 @@ type ISubjectService interface {
 	DeleteSubject(subjectId string) error
 	UpdateSubject(ctx context.Context, subjectId string, updates subjectmodel.SubjectUpdateRequest, newMajorId string) error
 	UpdateLikes(ctx context.Context, subjectID string, likes int) error
+	AddLikeByEmail(ctx context.Context, subjectID string, userEmail string) error
 }
 
 type SubjectService struct {
@@ -159,6 +160,22 @@ func (s *SubjectService) UpdateLikes(ctx context.Context, subjectID string, like
 	err = s.SubjectRepository.UpdateLikes(ctx, id, likes)
 	if err != nil {
 		log.Printf("Error updating subject likes: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *SubjectService) AddLikeByEmail(ctx context.Context, subjectID string, userEmail string) error {
+	id, err := primitive.ObjectIDFromHex(subjectID)
+	if err != nil {
+		log.Printf("Invalid ID format: %v", err)
+		return err
+	}
+
+	err = s.SubjectRepository.AddEmailToLikeList(ctx, id, userEmail)
+	if err != nil {
+		log.Printf("Error updating subject likelist: %v", err)
 		return err
 	}
 

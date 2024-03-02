@@ -15,6 +15,7 @@ type Subject struct {
 	PreRequisite       []string             `bson:"pre_requisite"`
 	CoRequisite        []string             `bson:"co_requisite"`
 	Likes              int                  `bson:"likes"`
+	Likelist           []string             `bson:"likelist"`
 	SubjectStatus      string               `bson:"subjectStatus"`
 	LastUpdated        primitive.DateTime   `bson:"last_updated"`
 	AvailableDuration  int                  `bson:"available_duration"`
