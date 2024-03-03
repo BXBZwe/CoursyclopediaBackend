@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ISubjectRepository interface {
@@ -132,6 +133,23 @@ func (r *SubjectRepository) UpdateLikes(ctx context.Context, subjectID primitive
 	return nil
 }
 
+// func (r *SubjectRepository) AddEmailToLikeList(ctx context.Context, subjectID primitive.ObjectID, userEmail string) error {
+// 	collection := db.GetCollection("subjects")
+
+// 	filter := bson.M{"_id": subjectID}
+// 	update := bson.M{
+// 		"$addToSet": bson.M{"likelist": userEmail},
+// 		"$inc":      bson.M{"likes": 1},
+// 	}
+
+// 	_, err := collection.UpdateOne(ctx, filter, update)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
+
 func (r *SubjectRepository) AddEmailToLikeList(ctx context.Context, subjectID primitive.ObjectID, userEmail string) error {
 	collection := db.GetCollection("subjects")
 
@@ -139,9 +157,13 @@ func (r *SubjectRepository) AddEmailToLikeList(ctx context.Context, subjectID pr
 	update := bson.M{
 		"$addToSet": bson.M{"likelist": userEmail},
 		"$inc":      bson.M{"likes": 1},
+		"$setOnInsert": bson.M{
+			"likelist": []string{}, // Initialize likelist as an empty array on insert
+		},
 	}
 
-	_, err := collection.UpdateOne(ctx, filter, update)
+	opts := options.Update().SetUpsert(true) // Ensure this is an upsert operation
+	_, err := collection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return err
 	}
